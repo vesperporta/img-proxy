@@ -4,7 +4,6 @@ import StringIO, urllib2
 
 app = Flask(__name__)
 
-
 @app.route('/')
 def proxy_image():
     if request.args.has_key('url'):
@@ -34,15 +33,19 @@ def proxy_image():
         print file_name + ' loaded from url'
     img = Image.open(fh)
     if file_from_url:
-        img_size = float(img_size[0]), float(img_size[1])
-
         if img_mod == 'direct':
             img = img.resize(img_size, Image.ANTIALIAS)
         elif img_mod == 'ratiow':
-            img_size = img_size[0], int(img.size[1] * img_size[0] / img.size[0])
+            img_size = (
+                            img_size[0],
+                            int(img.size[1] * float(img_size[0]) / img.size[0])
+                        )
             img.thumbnail(img_size, Image.BICUBIC)
         elif img_mod == 'ratioh':
-            img_size = int(img.size[0] * img_size[1] / img.size[1]), img_size[1]
+            img_size = (
+                            int(img.size[0] * float(img_size[1]) / img.size[1]),
+                            img_size[1]
+                        )
             img.thumbnail(img_size, Image.BICUBIC)
             # This save is to store to disk if required to handle files
             # internally img.save(file_name)
@@ -50,7 +53,6 @@ def proxy_image():
     img.save(img_io, 'JPEG', quality=70)
     img_io.seek(0)
     return send_file(img_io, mimetype='image/jpeg')
-
 
 if __name__ == '__main__':
     app.run()
